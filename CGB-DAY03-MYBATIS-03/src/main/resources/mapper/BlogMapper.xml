@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.jt.dao.BlogDao">
+  
+ 	<!-- 查询表格信息,并按照要求排序 -->
+  	<select id="findPageBlogs" resultType="blog">
+  		select * from blog order by ${columnName} ${orderMethod}
+  		limit #{startIndex},#{pageSize}
+  	</select>
+  	
+  	<!-- 插入表格信息 -->
+  	<insert id="insertBlog" parameterType="blog"
+  		useGeneratedKeys="true"
+  		keyProperty="id">
+  	 insert into blog (id,title,content,createdTime) values
+  	 (null,#{title},#{content},#{createdTime})
+  	</insert>
+  	
+  	<!-- 多表关系的查询,实际仅一次查询 -->
+  	<resultMap type="blogResult" id="blogResult">
+  	<!-- 必须定义 -->
+  	<id property="id" column="id"/>
+  	<result property="title" column="title"/>
+  	<result property="content" column="content"/>
+  	<result property="createdTime" column="createdTime"/>
+  	<!-- 关联属性映射 -->
+  	<association property="author" javaType="author">
+  	<id property="id" column="authorId"/>
+  	<result property="username" column="username"/>
+  	<result property="email" column="email"/>
+  	</association>
+  	</resultMap>  	
+  <select id="findBlogResultById" resultMap="blogResult">
+  		select b.*,a.username,a.email from blog b join author a 
+  		on b.authorId = a.id where b.id=#{id}
+  </select>
+  
+  <!-- fetchType配置单个局部的延迟加载参数为eager和lazy,默认lazy -->
+  <resultMap type="blogResult" id="blogResultMap">
+	  <association property="author" 
+	  			   column="authorId" 
+	  			   fetchType="eager"
+	  			   javaType="author"
+	  select="com.jt.dao.AuthorDao.findAuthorById" >
+	  </association>
+  </resultMap>
+  <select id="findBlogResultWithId" resultMap="blogResultMap">
+  		select * from Blog where id=#{id}
+  </select>
+  
+  <!-- 测试查询全表以及对应的author属性 -->
+  <resultMap type="blogResult" id="blogResultMap1">
+	  <association property="author" 
+	  			   column="authorId" 
+	  			   javaType="author"
+	  select="com.jt.dao.AuthorDao.findAuthorById" >
+	  </association>
+  </resultMap>
+  <select id="findBlogListWithId" resultMap="blogResultMap1">
+  		select * from Blog
+  </select>
+  
+  <!-- 动态的sql删除数据 -->
+  <delete id="deleteBlogById">
+  	delete from blog where id in 
+  	<foreach collection="ids" item="id" separator="," open="(" close=")">
+  		#{id}
+  	</foreach>
+  </delete>
+  
+  <!-- 动态插入数据 -->
+  <insert id="insertBlogs">
+  	insert into blog(id,title,content,createdTime) values
+  <foreach collection="list" item="blog" separator="," >
+  		(null,#{blog.title},#{blog.content},#{blog.createdTime})
+  </foreach>
+  </insert>
+  </mapper>

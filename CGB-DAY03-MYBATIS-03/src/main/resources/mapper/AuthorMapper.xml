@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+  <mapper namespace="com.jt.dao.AuthorDao">
+  
+  <!-- 此方式的实现依赖于数据库,存在一定的局限性,仅适用于mysql 
+  		如果不想对数据库有较大依赖,可在应用程序中,通过javaAPI创建随机ID.-->
+  <!-- 开启二级缓存 -->
+  <cache eviction="LRU" flushInterval="6000" size="240" readOnly="true"/>
+  <insert id="insertAuthor" parameterType="author">
+  	<selectKey keyProperty="id" resultType="string" order="BEFORE">
+  		select replace(uuid(),'-','')
+  	</selectKey>
+ 
+   insert into author
+   (id,username,password,email) values
+   (#{id},#{username},#{password},#{email})
+   </insert>
+   
+   <select id="findAuthorById" resultType="author">
+   		select * from author where id=#{id}
+   </select>
+   
+   <update id="updateAuthor" >
+   update author set 
+   username =#{username}, 
+   email=#{email} where id=#{id}
+   </update>
+  </mapper>
